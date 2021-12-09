@@ -93,6 +93,7 @@ class Blockchain {
      * @param {*} address 
      */
     requestMessageOwnershipVerification(address) {
+        console.log(address)
         return new Promise((resolve) => {
             resolve(`${address}:${new Date().getTime().toString().slice(0,-3)}:starRegistry`);
         });
@@ -124,7 +125,7 @@ class Blockchain {
             {
                 if(bitcoinMessage.verify(message, address, signature))
                 {
-                    let block = self._addBlock(new BlockClass({owner: address, data: star}));
+                    let block = self._addBlock(new BlockClass.Block({owner: address, data: star}));
                     resolve(block)
                 }
                 else

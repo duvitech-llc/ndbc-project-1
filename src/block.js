@@ -10,6 +10,7 @@
  */
 
 const SHA256 = require('crypto-js/sha256');
+const res = require('express/lib/response');
 const hex2ascii = require('hex2ascii');
 
 class Block {
@@ -39,13 +40,22 @@ class Block {
         let self = this;
         return new Promise((resolve, reject) => {
             // Save in auxiliary variable the current block hash
-                                            
-            // Recalculate the hash of the Block
-            // Comparing if the hashes changed
-            // Returning the Block is not valid
-            
-            // Returning the Block is valid
+            let blockHash = self.hash;
+            self.hash = null;
 
+            // Recalculate the hash of the Block
+            let hashCalc = SHA256(JSON.stringify(self)).toString();
+            // Comparing if the hashes changed
+            self.hash = blockHash;
+            if(blockHash == hashcheck){
+                // Returning the Block is not valid
+                reject(true);
+            }
+            else
+            {
+                // Returning the Block is valid
+                resolve(false);
+            }
         });
     }
 
@@ -60,11 +70,21 @@ class Block {
      */
     getBData() {
         // Getting the encoded data saved in the Block
-        // Decoding the data to retrieve the JSON representation of the object
-        // Parse the data to an object to be retrieve.
-
-        // Resolve with the data if the object isn't the Genesis block
-
+        let self = this;
+        return new Promise((resolve, reject) => {
+            // Decoding the data to retrieve the JSON representation of the object
+            let data = hex2ascii(self.body)
+            // Parse the data to an object to be retrieve.
+            data = JSON.parse(data)
+            // Resolve with the data if the object isn't the Genesis block
+            if(self.hash !=0){
+                resolve(data);
+            }
+            else
+            {
+                reject({error: 'cannot return genisis block'});
+            }
+        });
     }
 
 }

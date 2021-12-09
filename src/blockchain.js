@@ -64,7 +64,23 @@ class Blockchain {
     _addBlock(block) {
         let self = this;
         return new Promise(async (resolve, reject) => {
-           
+            try{
+                if(self.chain.length > 0)
+                {
+                    block.previousBlockHash = self.chain[self.chain.length -1].hash;
+                }
+                block.height = self.chain.length;
+                block.time = new Date().getTime().toString().slice(0, -3);
+
+                block.hash = SHA256(JSON.stringify(block)).toString();
+                self.chain.push(block);
+                self.chain.height = self.chain.length;
+                resolve(block);
+            }
+            catch(err)
+            {
+                reject({error: err});
+            }
         });
     }
 
@@ -78,7 +94,7 @@ class Blockchain {
      */
     requestMessageOwnershipVerification(address) {
         return new Promise((resolve) => {
-            
+            resolve(`${address}:${new Date().getTime().toString().slice(0,-3)}:starRegistry`);
         });
     }
 
@@ -102,7 +118,24 @@ class Blockchain {
     submitStar(address, message, signature, star) {
         let self = this;
         return new Promise(async (resolve, reject) => {
-            
+            let messageTime = parseInt(message.split(':')[1]);
+            let currentTime = parseInt(new Date().getTime().toString().slice(0, -3));
+            if(currentTime - messageTime < 300000)  // 5min = ( 5 x 60 * 1000 ) ms
+            {
+                if(bitcoinMessage.verify(message, address, signature))
+                {
+                    let block = self._addBlock(new BlockClass({owner: address, data: star}));
+                    resolve(block)
+                }
+                else
+                {
+                    reject({error: 'verification failed'});
+                }
+            }
+            else
+            {
+                reject({error: 'more than 5 minutes have elapsed since message was sent'});
+            }
         });
     }
 
@@ -115,6 +148,22 @@ class Blockchain {
     getBlockByHash(hash) {
         let self = this;
         return new Promise((resolve, reject) => {
+            try
+            {
+                let idxBlock = self.chain.findIndex(ele => ele.hash == hash);
+                if(idxBlock > 0)
+                {
+                    resolve(foundBlock);
+                }
+                else
+                {
+                    reject(null);
+                }
+            }
+            catch(err)
+            {
+                reject({error: err});
+            }
            
         });
     }
@@ -146,7 +195,23 @@ class Blockchain {
         let self = this;
         let stars = [];
         return new Promise((resolve, reject) => {
-            
+            try
+            {
+                self.chain.forEach( (block) => {
+                    block.getBData().then((result) => {
+                        if( result && result.owner === address)
+                        {
+                            stars.push(result);
+                        }
+                    });
+                });
+
+                resolve(stars);
+            }
+            catch(err)
+            {
+                reject({error: err})
+            }
         });
     }
 
@@ -160,7 +225,23 @@ class Blockchain {
         let self = this;
         let errorLog = [];
         return new Promise(async (resolve, reject) => {
-            
+            try
+            {
+                let prevBlockHash = null;
+                for (let i = 0; i < self.chain.length; i++) {
+                    let isValid = await self.chain[i].validate();
+                    if(!isValid || self.ch[i].prevBlockHash != prevBlockHash)
+                    {
+                        errorLog.push({block: self.chain[i], error: 'Invalid block'});
+                    }
+                    prevBlockHash =  self.chain[i].hash;
+                }
+                resolve(errorLog);
+            }
+            catch(err)
+            {
+                reject({error: err})
+            }
         });
     }
 

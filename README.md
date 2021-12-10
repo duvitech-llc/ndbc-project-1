@@ -199,3 +199,7 @@ You should see in your terminal a message indicating that the server is listenin
      ![Request: http://localhost:8000/submitstar](images/submit-star.png)
 6. Retrieve Stars owned by me
     ![Request: http://localhost:8000/blocks/<WALLET_ADDRESS>](images/retrieve-stars.png)
+7. Request block by hash
+    ![Request: http://localhost:8000/blocks/<WALLET_ADDRESS>](images/request-blockbyhash.png)
+8. Validate Chain
+    ![Request: http://localhost:8000/blocks/<WALLET_ADDRESS>](images/request-validatechain.png)

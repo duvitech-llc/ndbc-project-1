@@ -11,6 +11,7 @@
 const SHA256 = require('crypto-js/sha256');
 const BlockClass = require('./block.js');
 const bitcoinMessage = require('bitcoinjs-message');
+const { contentDisposition } = require('express/lib/utils');
 
 class Blockchain {
 
@@ -75,6 +76,14 @@ class Blockchain {
                 block.hash = SHA256(JSON.stringify(block)).toString();
                 self.chain.push(block);
                 self.chain.height = self.chain.length;
+                let chainErrors = await self.validateChain();
+
+                if (chainErrors.length > 0) {
+                    let badblock = self.chain.pop();
+                    self.chain.height = self.chain.length;
+                    return reject(chainErrors);
+                }
+
                 resolve(block);
             }
             catch(err)
@@ -93,7 +102,6 @@ class Blockchain {
      * @param {*} address 
      */
     requestMessageOwnershipVerification(address) {
-        console.log(address)
         return new Promise((resolve) => {
             resolve(`${address}:${new Date().getTime().toString().slice(0,-3)}:starRegistry`);
         });
@@ -151,19 +159,23 @@ class Blockchain {
         return new Promise((resolve, reject) => {
             try
             {
-                let idxBlock = self.chain.findIndex(ele => ele.hash == hash);
+                let idxBlock = self.chain.findIndex(function(ele){
+                    return ele.hash === hash;
+                });
+                console.log("index ", idxBlock)
+
                 if(idxBlock > 0)
                 {
-                    resolve(foundBlock);
+                    resolve(self.chain[idxBlock]);
                 }
                 else
                 {
-                    reject(null);
+                    resolve(null);
                 }
             }
             catch(err)
             {
-                reject({error: err});
+                resolve(null);
             }
            
         });
@@ -230,19 +242,23 @@ class Blockchain {
             {
                 let prevBlockHash = null;
                 for (let i = 0; i < self.chain.length; i++) {
-                    let isValid = await self.chain[i].validate();
-                    if(!isValid || self.ch[i].prevBlockHash != prevBlockHash)
+                    let currentBlock = self.chain[i];
+                    let isValid = await currentBlock.validate();
+                    if(!isValid || currentBlock.previousBlockHash != prevBlockHash)
                     {
-                        errorLog.push({block: self.chain[i], error: 'Invalid block'});
+                        errorLog.push({block: currentBlock, error: 'Invalid block'});
                     }
-                    prevBlockHash =  self.chain[i].hash;
+
+                    prevBlockHash = currentBlock.hash;
                 }
                 resolve(errorLog);
             }
             catch(err)
             {
-                reject({error: err})
+                errorLog.push({error: err});
+                reject();
             }
+            
         });
     }
 

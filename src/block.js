@@ -42,19 +42,17 @@ class Block {
             // Save in auxiliary variable the current block hash
             let blockHash = self.hash;
             self.hash = null;
-
             // Recalculate the hash of the Block
             let hashCalc = SHA256(JSON.stringify(self)).toString();
             // Comparing if the hashes changed
             self.hash = blockHash;
-            if(blockHash == hashcheck){
-                // Returning the Block is not valid
-                reject(true);
+            if(blockHash === hashCalc)
+            {
+                resolve(true)
             }
             else
             {
-                // Returning the Block is valid
-                resolve(false);
+                reject(false)
             }
         });
     }

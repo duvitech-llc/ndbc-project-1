@@ -129,7 +129,7 @@ class Blockchain {
         return new Promise(async (resolve, reject) => {
             let messageTime = parseInt(message.split(':')[1]);
             let currentTime = parseInt(new Date().getTime().toString().slice(0, -3));
-            if(currentTime - messageTime < 300000)  // 5min = ( 5 x 60 * 1000 ) ms
+            if(currentTime - messageTime < 300)  // 5min = ( 5 x 60 ) s
             {
                 if(bitcoinMessage.verify(message, address, signature))
                 {
